@@ -99,7 +99,9 @@
         [CommandMethod("ModPlus", "mpPrToTable", CommandFlags.UsePickSet)]
         public void MpPrToTableFunction()
         {
+#if !DEBUG
             Statistic.SendCommandStarting(new ModPlusConnector());
+#endif
 
             try
             {
@@ -116,15 +118,14 @@
                 opts.Keywords.Add(Language.GetItem(LangItem, "h2"));
                 opts.Keywords.Add(Language.GetItem(LangItem, "h3"));
                 var kws = opts.Keywords.GetDisplayString(true);
-                opts.MessageForAdding = "\n" + Language.GetItem(LangItem, "h1") + ": " + kws;
+                opts.MessageForAdding = $"\n{Language.GetItem(LangItem, "h1")}: {kws}";
                 opts.KeywordInput += (sender, e) =>
                 {
                     if (e.Input.Equals(Language.GetItem(LangItem, "h2")))
                     {
                         var pko = new PromptKeywordOptions(
-                            "\n" + Language.GetItem(LangItem, "h4") +
-                            " [" + Language.GetItem(LangItem, "yes") + "/" + Language.GetItem(LangItem, "no") + "]: ",
-                            Language.GetItem(LangItem, "yes") + " " + Language.GetItem(LangItem, "no"));
+                            $"\n{Language.GetItem(LangItem, "h4")} [{Language.GetItem(LangItem, "yes")}/{Language.GetItem(LangItem, "no")}]: ",
+                            $"{Language.GetItem(LangItem, "yes")} {Language.GetItem(LangItem, "no")}");
                         pko.Keywords.Default =
                             _askRow ? Language.GetItem(LangItem, "yes") : Language.GetItem(LangItem, "no");
                         var promptResult = ed.GetKeywords(pko);
@@ -135,7 +136,7 @@
                     }
                     else if (e.Input.Equals(Language.GetItem(LangItem, "h3")))
                     {
-                        var pio = new PromptIntegerOptions("\n" + Language.GetItem(LangItem, "h5") + ": ")
+                        var pio = new PromptIntegerOptions($"\n{Language.GetItem(LangItem, "h5")}: ")
                         {
                             AllowNegative = false,
                             AllowNone = false,
@@ -164,8 +165,8 @@
                     var findProductsWin = new FindProductsProgress(objectIds, tr);
                     if (findProductsWin.ShowDialog() == true)
                     {
-                        var peo = new PromptEntityOptions("\n" + Language.GetItem(LangItem, "h6") + ": ");
-                        peo.SetRejectMessage("\n" + Language.GetItem(LangItem, "h7"));
+                        var peo = new PromptEntityOptions($"\n{Language.GetItem(LangItem, "h6")}: ");
+                        peo.SetRejectMessage($"\n{Language.GetItem(LangItem, "h7")}");
                         peo.AddAllowedClass(typeof(Table), false);
                         var per = ed.GetEntity(peo);
                         if (per.Status != PromptStatus.OK)
@@ -257,14 +258,14 @@
                     double? mass = double.TryParse(mpMass, out var d) ? d : 0;
 
                     var specificationItem = new SpecificationItem(
-                        null, 
+                        null,
                         string.Empty,
-                        string.Empty, 
                         string.Empty,
-                        string.Empty, 
-                        SpecificationItemInputType.HandInput, 
-                        string.Empty, 
-                        string.Empty, 
+                        string.Empty,
+                        string.Empty,
+                        SpecificationItemInputType.HandInput,
+                        string.Empty,
+                        string.Empty,
                         string.Empty,
                         mass);
 
@@ -336,12 +337,12 @@
                 string name;
                 if (selectedSpecItem.HasSteel)
                 {
-                    name = "\\A1;{\\C0;" + selectedSpecItem.BeforeName + " \\H0.9x;\\S" + selectedSpecItem.TopName + "/" +
-                           selectedSpecItem.SteelDoc + " " + selectedSpecItem.SteelType + ";\\H1.1111x; " + selectedSpecItem.AfterName;
+                    name =
+                        $"\\A1;{{\\C0;{selectedSpecItem.BeforeName} \\H0.9x;\\S{selectedSpecItem.TopName}/{selectedSpecItem.SteelDoc} {selectedSpecItem.SteelType};\\H1.1111x; {selectedSpecItem.AfterName}";
                 }
                 else
                 {
-                    name = selectedSpecItem.BeforeName + " " + selectedSpecItem.TopName + " " + selectedSpecItem.AfterName;
+                    name = $"{selectedSpecItem.BeforeName} {selectedSpecItem.TopName} {selectedSpecItem.AfterName}";
                 }
 
                 specificationItems.Add(new InsertToAutoCad.SpecificationItemForTable(
