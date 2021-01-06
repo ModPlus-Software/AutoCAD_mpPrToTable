@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
 
   <PropertyGroup>
-    <Version>1.2.5.0</Version>
+    <Version>1.2.6.0</Version>
     <RootNamespace>mpPrToTable</RootNamespace>
     <AssemblyName>$(RootNamespace)</AssemblyName>
   </PropertyGroup>
@@ -136,8 +136,8 @@
   </Choose>
 
   <ItemGroup>
-    <PackageReference Include="ModPlus.ProductDatabase" Version="2.2.0.11" ExcludeAssets="runtime" />
-    <PackageReference Include="ModPlusAPI" Version="5.0.0" ExcludeAssets="runtime" />
+    <PackageReference Include="ModPlus.ProductDatabase" Version="2.6.0.0" ExcludeAssets="runtime" />
+    <PackageReference Include="ModPlusAPI" Version="6.7.0" ExcludeAssets="runtime" />
     <PackageReference Include="ModPlusStyle" Version="3.7.0" ExcludeAssets="runtime" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
       <PrivateAssets>all</PrivateAssets>

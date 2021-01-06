@@ -14,8 +14,9 @@
     {
         private readonly ObjectId[] _objectIds;
         private readonly Transaction _tr;
+        private SynchronizationContext _context;
 
-        public List<SpecificationItem> SpecificationItems;
+        public List<mpProductInt.Specification.SpecificationItem> SpecificationItems;
 
         public FindProductsProgress(ObjectId[] objectIds, Transaction tr)
         {
@@ -27,8 +28,6 @@
             ProgressBar.Value = 0;
             ContentRendered += FindProductsProgress_ContentRendered;
         }
-
-        SynchronizationContext _context;
 
         private async void FindProductsProgress_ContentRendered(object sender, EventArgs e)
         {
@@ -45,10 +44,10 @@
         {
             try
             {
-                SpecificationItems = new List<SpecificationItem>();
+                SpecificationItems = new List<mpProductInt.Specification.SpecificationItem>();
 
-                var products = new List<MpProduct>();
-                var productsByAttr = new List<SpecificationItem>();
+                var products = new List<DbProduct>();
+                var productsByAttr = new List<mpProductInt.Specification.SpecificationItem>();
 
                 var counts = new List<int>();
                 var countsByAttr = new List<int>();
@@ -63,17 +62,14 @@
                             _ =>
                         {
                             ProgressBar.Value = i;
-                            ProgressText.Text = i + "/" + _objectIds.Length;
+                            ProgressText.Text = $"{i}/{_objectIds.Length}";
                         }, null);
 
                         var specificationItemByBlockAttributes =
                             ProductsToTable.GetProductFromBlockByAttributes(_tr, _objectIds[i]);
                         if (specificationItemByBlockAttributes != null)
                         {
-                            if (
-                                !productsByAttr.Contains(
-                                    specificationItemByBlockAttributes,
-                                    new SpecificationItemHelpers.EqualSpecificationItem()))
+                            if (!productsByAttr.Any(p => p.Equals(specificationItemByBlockAttributes)))
                             {
                                 productsByAttr.Add(specificationItemByBlockAttributes);
                                 countsByAttr.Add(1);
@@ -82,13 +78,7 @@
                             {
                                 for (var j = 0; j < productsByAttr.Count; j++)
                                 {
-                                    if (productsByAttr[j].Position == specificationItemByBlockAttributes.Position &
-                                        productsByAttr[j].BeforeName ==
-                                        specificationItemByBlockAttributes.BeforeName &
-                                        productsByAttr[j].Designation ==
-                                        specificationItemByBlockAttributes.Designation &
-                                        productsByAttr[j].Mass == specificationItemByBlockAttributes.Mass &
-                                        productsByAttr[j].Note == specificationItemByBlockAttributes.Note)
+                                    if (productsByAttr[j].Equals(specificationItemByBlockAttributes))
                                         countsByAttr[j]++;
                                 }
                             }
@@ -105,12 +95,12 @@
                             _ =>
                         {
                             ProgressBar.Value = i;
-                            ProgressText.Text = i + "/" + _objectIds.Length;
+                            ProgressText.Text = $"{i}/{_objectIds.Length}";
                         }, null);
 
                         if (XDataHelpersForProducts.NewFromEntity(entity) is MpProductToSave mpProductToSave)
                         {
-                            var productFromSaved = MpProduct.GetProductFromSaved(mpProductToSave);
+                            var productFromSaved = DbProduct.GetProductFromSaved(mpProductToSave);
                             if (productFromSaved != null)
                             {
                                 if (!products.Contains(productFromSaved))
@@ -154,7 +144,7 @@
                 }
 
                 // Сортировка по значению Позиции
-                SpecificationItems.Sort(new SpecificationItemHelpers.AlphanumComparatorFastToSortByPosition());
+                SpecificationItems.Sort(new mpProductInt.Specification.AlphanumComparatorFastToSortByPosition());
             }
             catch (Exception exception)
             {

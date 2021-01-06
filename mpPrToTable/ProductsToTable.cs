@@ -11,9 +11,7 @@
     using ModPlus.Helpers;
     using ModPlusAPI;
     using ModPlusAPI.Windows;
-    using mpProductInt;
     using AcApp = Autodesk.AutoCAD.ApplicationServices.Core.Application;
-    using Visibility = System.Windows.Visibility;
 
     public class ProductsToTable : IExtensionApplication
     {
@@ -219,7 +217,7 @@
         /// </summary>
         /// <param name="tr">Transaction</param>
         /// <param name="objectId">Block id</param>
-        public static SpecificationItem GetProductFromBlockByAttributes(Transaction tr, ObjectId objectId)
+        public static mpProductInt.Specification.SpecificationItem GetProductFromBlockByAttributes(Transaction tr, ObjectId objectId)
         {
             var blk = tr.GetObject(objectId, OpenMode.ForRead) as BlockReference;
             if (blk != null)
@@ -257,13 +255,9 @@
 
                     double? mass = double.TryParse(mpMass, out var d) ? d : 0;
 
-                    var specificationItem = new SpecificationItem(
-                        null,
+                    var specificationItem = new mpProductInt.Specification.SpecificationItem(
                         string.Empty,
                         string.Empty,
-                        string.Empty,
-                        string.Empty,
-                        SpecificationItemInputType.HandInput,
                         string.Empty,
                         string.Empty,
                         string.Empty,
@@ -284,7 +278,7 @@
         /// <summary>
         /// Получение наименования из атрибута с установкой значения "Есть сталь"
         /// </summary>
-        public static void GetSpecificationItemNameFromAttr(SpecificationItem specificationItem, string attrValue)
+        public static void GetSpecificationItemNameFromAttr(mpProductInt.Specification.SpecificationItem specificationItem, string attrValue)
         {
             var hasSteel = false;
             if (attrValue.Contains("$") & attrValue.Contains("?"))
@@ -295,7 +289,7 @@
                     try
                     {
                         specificationItem.HasSteel = true;
-                        specificationItem.SteelVisibility = Visibility.Visible;
+                        specificationItem.IsVisibleSteel = true;
                         specificationItem.BeforeName = splitStr[0];
                         specificationItem.TopName = splitStr[1];
                         specificationItem.AfterName = splitStr[3];
@@ -313,7 +307,7 @@
             if (!hasSteel)
             {
                 specificationItem.HasSteel = false;
-                specificationItem.SteelVisibility = Visibility.Collapsed;
+                specificationItem.IsVisibleSteel = false;
                 specificationItem.SteelType = string.Empty;
                 specificationItem.SteelDoc = string.Empty;
                 specificationItem.BeforeName = attrValue;
@@ -322,36 +316,24 @@
             }
         }
 
-        private static void FillTable(ICollection<SpecificationItem> sItems, bool askRow, int round)
+        private static void FillTable(ICollection<mpProductInt.Specification.SpecificationItem> sItems, bool askRow, int round)
         {
             if (sItems.Count == 0)
                 return;
             var specificationItems = new List<InsertToAutoCad.SpecificationItemForTable>();
-            foreach (var selectedSpecItem in sItems)
+            foreach (var i in sItems)
             {
                 var mass = string.Empty;
-                if (selectedSpecItem.Mass != null)
-                    mass = Math.Round(selectedSpecItem.Mass.Value, round).ToString(CultureInfo.InvariantCulture);
+                if (i.Mass != null)
+                    mass = Math.Round(i.Mass.Value, round).ToString(CultureInfo.InvariantCulture);
 
                 // В зависимости от Наименования и стали создаем строку наименования
-                string name;
-                if (selectedSpecItem.HasSteel)
-                {
-                    name =
-                        $"\\A1;{{\\C0;{selectedSpecItem.BeforeName} \\H0.9x;\\S{selectedSpecItem.TopName}/{selectedSpecItem.SteelDoc} {selectedSpecItem.SteelType};\\H1.1111x; {selectedSpecItem.AfterName}";
-                }
-                else
-                {
-                    name = $"{selectedSpecItem.BeforeName} {selectedSpecItem.TopName} {selectedSpecItem.AfterName}";
-                }
+                var name = i.HasSteel
+                    ? $"\\A1;{{\\C0;{i.BeforeName} \\H0.9x;\\S{i.TopName}/{i.SteelDoc} {i.SteelType};\\H1.1111x; {i.AfterName}"
+                    : $"{i.BeforeName} {i.TopName} {i.AfterName}";
 
                 specificationItems.Add(new InsertToAutoCad.SpecificationItemForTable(
-                    selectedSpecItem.Position,
-                    selectedSpecItem.Designation,
-                    name,
-                    mass,
-                    selectedSpecItem.Count,
-                    selectedSpecItem.Note));
+                    i.Position, i.Designation, name, mass, i.Count, i.Note));
             }
 
             InsertToAutoCad.AddSpecificationItemsToTable(specificationItems, askRow);
